@@ -1,6 +1,9 @@
 #include <signal.h>
-#define NOMINMAX
 #include <windows.h>
+#include "color_space.cpp"
+#include <iostream>
+#include <vector>
+#define NOMINMAX
 
 
 volatile sig_atomic_t _FLAG = 0;
@@ -32,6 +35,39 @@ int main(int argc, char* argv[]) {
 
 	//ï`âÊÉãÅ[Év
 	for (size_t count = 0; !_FLAG; count++) {
+		std::string buf{};
 
+		for (size_t i = 0; i < height; i++) {
+			for (size_t t = 0; i < width; t++) {
+				buf += colorSpace(color[i][t]);
+			}
+			buf += "\n";
+		}
+		std::cout << "\033[H";
+		std::cout << buf;
+	}
+	std::vector<glm::vec2> heart(const size_t n) {
+		std::vector<glm::vec2> pts(n);
+		for (size_t i = 0; i < n; i++) {
+			double t = (double)i / n * std::numbers::pi * 2.0;
+			double x = 16 * pow(sin(t), 3);
+			double y = 13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t);
+			pts[i] = { x / 16.0, -((y + 2.5) / 14.5) };
+		}
+		return pts;
+	}
+
+	void drawHeart(const size_t n, const size_t count, const size_t width, const size_t height) {
+		std::vector<std::vector<glm::ivec3>> color(height, std::vector<glm::ivec3>(width, { 0, 0, 0 }));
+		std::vector<glm::vec2> pts = heart(n);
+		auto rot = glm::toMat4(glm::quat(glm::vec3(0.0, count * 0.1, 0.0)));
+
+		for (auto& p : pts) {
+			auto v = rot * glm::vec4(p, 0.0, 1.0);
+			v *= (width / 2.0) * 0.9;
+			v += (width / 2.0);
+			if (v.y < 0 || v.y >= height || v.x < 0 || v.x >= width) continue;
+			color[(size_t)v.y][(size_t)v.x] = { 255, 255, 255 };
+		}
 	}
 }
